@@ -1,0 +1,78 @@
+#!/bin/bash
+#=
+if [[ $# == 0 ]]; then
+    exec julia --color=yes --startup-file=no -e "include(\"${BASH_SOURCE[0]}\")" -i
+fi
+exec julia --color=yes --startup-file=no "${BASH_SOURCE[0]}" "$@"
+=#
+
+const _VERSION = "0.1.0 ALPHA"
+import Juliettine: map, filter  ;  using Juliettine  ;  using FileJockey
+# TODO move to FJ
+version_exiftool() = ( R=exe(["exiftool","-ver"]; fail=false); (R.exitcode!=0 || length(R.outs)!=1) ? nothing : R.outs[1] )
+
+
+
+
+
+
+
+
+
+
+
+function main()
+    while length(ARGS) > 0
+        opt = getopt()
+        if opt in ["--version"]
+            println("Exifuse $_VERSION")
+            if (s = version_exiftool()) !== nothing  println("exiftool $s installed")  else  @warn "exiftool not found/installed; exify() function not available"  end
+        end
+    end
+end
+
+
+@main
+
+
+
+
+
+
+
+
+##### INTERNAL; IGNORE THIS #####
+
+#### tweaks for REPL
+import REPL
+atreplinit() do repl
+    repl.prompt_color = Base.text_colors[:cyan]
+    repl.interface = REPL.setup_interface(repl)
+    _repl = Base.active_repl.interface.modes[1]
+    _repl.prompt = () -> "$(basename(pwd()))/::julia> "
+    @info "Exifuse $(_VERSION) -- exifuse.com"
+    @info """\"Ctrl+D\" to exit  ::  "]update" for latest versions"""
+    @info """Cheatsheet:
+                ls, ll, find        get file system entries
+                getfiles            filter entries to files only; follow symlink-to-files
+                checkpaths          check file system entries for symlink issues
+                checkdupl           check files for identical content
+                exify               read EXIF data of files
+                x.CreateDate        access EXIF values
+
+                Examples:
+
+                -- Explore:   Find oldest .cr2-photo:
+                > find() |> filter(hasext("cr2")) |> exify |> map(exif2shortdate) |> minimum
+
+                -- Fix:       Identify & remove duplicates:
+                > find() |> checkpaths |> getdupl |> rm
+
+                -- Organize:  Create new dir structure (using hardlinks):
+                > find() ......
+
+          """
+end
+####
+
+
