@@ -22,11 +22,32 @@ version_exiftool() = ( R=exe(["exiftool","-ver"]; fail=false); (R.exitcode!=0 ||
 
 
 function main()
+
+    F = nothing
+
     while length(ARGS) > 0
         opt = getopt()
+
         if opt in ["--version"]
             println("Exifuse $_VERSION")
             if (s = version_exiftool()) !== nothing  println("exiftool $s installed")  else  @warn "exiftool not found/installed; exify() function not available"  end
+
+        elseif opt === nothing || opt in ["--find"]
+            findpaths = getargs()
+            F = find(findpaths)
+            length(ARGS) == 0  &&  out(F)
+
+        elseif opt in ["--hardlinker"]
+            hardlinkdir = getarg()
+            ispath(hardlinkdir)  &&  erroruser("hardlink directory '$hardlinkdir' already exist; for safety disallowed (such imports will come later)")
+
+            F === nothing  &&  erroruser("no inputs given; use 'exifuse <dir> --hardlinker ..', or 'exifuse --find <dir> --hardlinker ..'")
+
+            files = F |> getfiles
+            X = exify(files)
+
+            mkdir(hardlinkdir)
+            hardlinker(files, X, hardlinkdir)
         end
     end
 end
