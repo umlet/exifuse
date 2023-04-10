@@ -9,6 +9,7 @@ exec julia --color=yes --startup-file=no "${BASH_SOURCE[0]}" "$@"
 const _VERSION = "0.1.0 ALPHA"
 import Juliettine: map, filter  ;  using Juliettine  ;  using FileJockey
 # TODO move to FJ
+# TODO carriage return on Windows
 version_exiftool() = ( R=exe(["exiftool","-ver"]; fail=false); (R.exitcode!=0 || length(R.outs)!=1) ? nothing : R.outs[1] )
 
 
