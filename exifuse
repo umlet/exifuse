@@ -74,7 +74,7 @@ atreplinit() do repl
     _print_help = true
 
     _replmode = Base.active_repl.interface.modes[1]
-    _replmode.prompt = () -> ( _print_help = true  ;  "$(basename(pwd()))/::julia> " )
+    _replmode.prompt = () -> "$(basename(pwd()))/::julia> "
 
     _msg = "\nExfuse help topics: find ls checkdupl checkpaths exify hardlinker ext hasext exif2shortdate.."
     _replmodeH = Base.active_repl.interface.modes[3]
