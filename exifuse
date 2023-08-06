@@ -5,22 +5,42 @@ if [[ $# == 0 ]]; then
 fi
 exec julia --color=yes --startup-file=no "${BASH_SOURCE[0]}" "$@"
 =#
-
-
 using Pkg
-_installed_packages = [x.name for x in values(Pkg.dependencies())]
-function _addpkg(pkg; useurl=false)  # name or URL
-    pkg in _installed_packages  &&  return
+
+
+_haspkg(pkg::AbstractString) = pkg in [x.name for x in values(Pkg.dependencies())]
+function _addpkg(pkg::AbstractString; useurl=false)  # name or URL
+    pkgname = useurl  ?  SubString(basename(pkg), 1, length(basename(pkg))-7)  :  pkg
+    _haspkg(pkgname)  &&  ( println("Package '$(pkgname)' already installed."); return )
+    println("Package '$pkgname' not found; installing..")
     useurl  &&  ( Pkg.add(url=pkg);  return )
     Pkg.add(pkg)
 end
-_addpkg("Shelly");  _addpkg("CommandLiner");  _addpkg("https://github.com/umlet/FileJockey.jl.git"; useurl=true)
+function _init()
+    _addpkg("Shelly")
+    _addpkg("CommandLiner")
+    _addpkg("https://github.com/umlet/FileJockey.jl.git"; useurl=true)
+    println("")
+    println("(Use 'exifuse --update' peiodically to ensure latest versions.)")
+end
+if length(ARGS) > 0  &&  ARGS[1] == "--init"
+    popfirst!(ARGS)
+    _init()
+end
+if !_haspkg("Shelly")  ||  !_haspkg("CommandLiner")  ||  !(_haspkg("FileJockey"))
+    println("exifuse not fully installed yet.\n\nRun 'exifuse --init'.")
+    exit(2)
+end
+
+
+
 
 
 const _VERSION = "0.1.0 ALPHA"
 import Shelly: ll, ldf
 import CommandLiner.Iter.Hack: map, filter  ;  using CommandLiner
 using FileJockey
+
 # TODO move to FJ
 version_exiftool() = ( R=exe(["exiftool","-ver"]; fail=false); (R.exitcode!=0 || length(R.outs)!=1) ? nothing : R.outs[1] )
 
@@ -40,7 +60,11 @@ function main()
     while length(ARGS) > 0
         opt = getopt()
 
-        if opt in ["--version"]
+        if opt in ["--init"]
+            _init()
+        elseif opt in ["--update"]
+            Pkg.update()
+        elseif opt in ["--version"]
             println("Exifuse $_VERSION")
             if (s = version_exiftool()) !== nothing  println("exiftool $s installed")  else  @warn "exiftool not found/installed; exify() function not available"  end
 
