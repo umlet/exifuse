@@ -32,6 +32,7 @@ let
         println("\nOK -- done!  (Use 'exifuse --install' to re-install.)")
     end
     ARGS == ["--install"]       &&  ( install()                                                                         ; exit(0) )
+    ARGS == ["--init"]          &&  ( install()                                                                         ; exit(0) )
     ARGS == ["--update"]        &&  ( update()                                                                          ; exit(0) )
     ARGS == ["--uninstall"]     &&  ( uninstall()                                                                       ; exit(0) )
     !all(areinstalled())        &&  ( println(stderr, "exifuse not fully installed yet.\n\nRun 'exifuse --install'.")   ; exit(2) )
