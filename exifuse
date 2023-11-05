@@ -8,16 +8,16 @@ exec julia --color=yes --startup-file=no "${BASH_SOURCE[0]}" "$@"
 
 let
     using Pkg
-    _deps = ["Shelly", "CommandLiner", "https://github.com/umlet/FileJockey.jl.git"]
+    _deps = ["Shelly", "CommandLiner", "https://github.com/umlet/Pipette.jl.git", "https://github.com/umlet/FileJockey.jl.git"]
     deps() = [ startswith(s, "https:") ? (chop(basename(s), tail=7), s) : (s, nothing)  for s in _deps ]  # returns (packagename, url=nothing) tuples
-    isinstalled(pkg::AbstractString) = pkg in [x.name for x in values(Pkg.dependencies())]
+    isinstalled(pkgname::AbstractString) = pkgname in keys(Pkg.project().dependencies)
     areinstalled() = isinstalled.([x[1] for x in deps()])
     function install()
         Pkg.update()
-        for (pkg,url) in deps()
-            isinstalled(pkg)  &&  ( println("Package '$(pkg)' already installed and up-to-date..");  continue )
-            println("Package '$(pkg)' not found; installing..")
-            url === nothing  ?  Pkg.add(pkg)  :  Pkg.add(url=url)
+        for (pkgname,url) in deps()
+            isinstalled(pkgname)  &&  ( println("Package '$(pkgname)' already installed and up-to-date..");  continue )
+            println("Package '$(pkgname)' not found; installing..")
+            url === nothing  ?  Pkg.add(pkgname)  :  Pkg.add(url=url)
         end
         println("\nOK -- done!  (Use 'exifuse --update' from time to time to get the latest versions.)")
     end
@@ -42,7 +42,12 @@ end
 
 
 import Shelly: ll, ldf
-import CommandLiner.Iter.Hack: map, filter  ;  using CommandLiner
+
+import Pipette
+
+using CommandLiner
+import CommandLiner.Iter.Hack: map, filter
+
 using FileJockey
 
 
